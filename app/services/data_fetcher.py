@@ -6,6 +6,7 @@ Simple script for fetching major market indices data using yfinance and saving t
 import os
 import sys
 import logging
+import json
 from datetime import datetime
 from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
@@ -49,40 +50,18 @@ class MarketDataFetcher:
         self.db = None
         self.collection = None
         
-        # Major market indices to track
-        self.indices = {
-            # US Indices
-            "^GSPC": "S&P 500",
-            "^IXIC": "NASDAQ Composite", 
-            "^DJI": "Dow Jones Industrial Average",
-            "^RUT": "Russell 2000",
-            "^VIX": "CBOE Volatility Index",
-            
-            # Popular ETFs
-            "SPY": "SPDR S&P 500 ETF",
-            "QQQ": "Invesco QQQ ETF",
-            "IWM": "iShares Russell 2000 ETF",
-            "VTI": "Vanguard Total Stock Market ETF",
-            "DIA": "SPDR Dow Jones Industrial Average ETF",
-            
-            # International
-            "EFA": "iShares MSCI EAFE ETF",
-            "EEM": "iShares MSCI Emerging Markets ETF",
-            
-            # Sectors
-            "XLK": "Technology Select Sector SPDR Fund",
-            "XLF": "Financial Select Sector SPDR Fund", 
-            "XLE": "Energy Select Sector SPDR Fund",
-            "XLV": "Health Care Select Sector SPDR Fund",
-            
-            # Bonds
-            "TLT": "iShares 20+ Year Treasury Bond ETF",
-            "LQD": "iShares iBoxx Investment Grade Corporate Bond ETF",
-            
-            # Commodities
-            "GLD": "SPDR Gold Trust",
-            "SLV": "iShares Silver Trust",
-        }
+        # Load indices from metadata file instead of hardcoding
+        metadata_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'indices_metadata.json')
+        try:
+            with open(metadata_path, 'r') as f:
+                self.metadata: Dict[str, Dict] = json.load(f)
+                self.indices = list(self.metadata.keys())
+                self.logger.info(f"Loaded {len(self.indices)} symbols from metadata")
+        except Exception as e:
+            self.logger.error(f"Failed to load metadata from {metadata_path}: {e}")
+            # Fallback to empty list; run won't fetch anything
+            self.metadata = {}
+            self.indices = []
 
     def _setup_logging(self) -> logging.Logger:
         """Set up simple logging."""
@@ -153,9 +132,11 @@ class MarketDataFetcher:
                 except (ValueError, TypeError):
                     return None
             
+            name_from_meta = self.metadata.get(symbol, {}).get('name')
+            
             return IndexData(
                 symbol=symbol,
-                name=self.indices.get(symbol, info.get('shortName', symbol)),
+                name=name_from_meta or info.get('shortName', symbol),
                 current_price=current_price,
                 change=change,
                 change_percent=change_percent,
@@ -177,7 +158,7 @@ class MarketDataFetcher:
         self.logger.info("Fetching market data...")
         
         results = []
-        for symbol in self.indices.keys():
+        for symbol in self.indices:
             data = self.fetch_single_ticker(symbol)
             if data:
                 results.append(data)
@@ -261,9 +242,11 @@ class MarketDataFetcher:
 
     def list_symbols(self):
         """List all tracked symbols."""
-        print("Tracked symbols:")
-        for symbol, name in self.indices.items():
-            print(f"  {symbol}: {name}")
+        print(f"Tracked symbols ({len(self.indices)}):")
+        for symbol in self.indices:
+            name = self.metadata.get(symbol, {}).get('name', symbol)
+            country = self.metadata.get(symbol, {}).get('country', 'Unknown')
+            print(f"  {symbol}: {name} ({country})")
 
 def main():
     """Main entry point."""
