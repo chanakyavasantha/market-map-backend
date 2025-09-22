@@ -4,6 +4,7 @@
 # Make sure your backend server is running on localhost:8000
 
 BASE_URL="http://localhost:8000"
+#BASE_URL="https://market-map-backend-hcezehhmakf8exca.canadacentral-01.azurewebsites.net/"
 echo "Testing MarketMap API endpoints..."
 echo "Base URL: $BASE_URL"
 echo "==========================================="
