@@ -12,7 +12,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # For local development
-        "https://calm-field-0e1a5ae1e.azurestaticapps.net",  # Your deployed frontend
+        "https://calm-field-0e1a5ae1e.2.azurestaticapps.net",
     ],
     allow_credentials=True,
     allow_methods=["*"],
