@@ -2,14 +2,13 @@ import os
 import logging
 from pymongo import MongoClient
 from fastapi import HTTPException
+import ssl
 
-# Add logging configuration
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_mongodb_collection():
     try:
-        # Debug: Log environment variables (without exposing sensitive data)
         mongodb_uri = os.getenv("MONGODB_URI")
         db_name = os.getenv("DB_NAME", "marketmap")
         collection_name = os.getenv("COLLECTION_NAME", "indices")
@@ -22,9 +21,17 @@ def get_mongodb_collection():
             logger.error("MONGODB_URI environment variable is not set")
             raise HTTPException(status_code=500, detail="Database configuration error")
         
-        # Log connection attempt
         logger.info("Attempting to connect to MongoDB...")
-        client = MongoClient(mongodb_uri)
+        
+        # Add SSL configuration for Azure compatibility
+        client = MongoClient(
+            mongodb_uri,
+            ssl=True,
+            ssl_cert_reqs=ssl.CERT_NONE,
+            serverSelectionTimeoutMS=30000,
+            connectTimeoutMS=30000,
+            socketTimeoutMS=30000
+        )
         
         # Test the connection
         client.admin.command('ping')
