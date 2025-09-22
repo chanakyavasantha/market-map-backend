@@ -1,19 +1,39 @@
 import os
-from fastapi import HTTPException
+import logging
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
+from fastapi import HTTPException
+
+# Add logging configuration
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def get_mongodb_collection():
-    """Get MongoDB collection for market data"""
     try:
+        # Debug: Log environment variables (without exposing sensitive data)
         mongodb_uri = os.getenv("MONGODB_URI")
-        if not mongodb_uri:
-            raise HTTPException(status_code=500, detail="MongoDB URI not configured")
-        
-        client = MongoClient(mongodb_uri)
         db_name = os.getenv("DB_NAME", "marketmap")
-        collection_name = os.getenv("COLLECTION_NAME", "market_data")
+        collection_name = os.getenv("COLLECTION_NAME", "indices")
         
-        return client[db_name][collection_name]
+        logger.info(f"MongoDB URI exists: {bool(mongodb_uri)}")
+        logger.info(f"DB Name: {db_name}")
+        logger.info(f"Collection Name: {collection_name}")
+        
+        if not mongodb_uri:
+            logger.error("MONGODB_URI environment variable is not set")
+            raise HTTPException(status_code=500, detail="Database configuration error")
+        
+        # Log connection attempt
+        logger.info("Attempting to connect to MongoDB...")
+        client = MongoClient(mongodb_uri)
+        
+        # Test the connection
+        client.admin.command('ping')
+        logger.info("MongoDB connection successful")
+        
+        db = client[db_name]
+        collection = db[collection_name]
+        return collection
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database connection error: {str(e)}")
+        logger.error(f"MongoDB connection failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database connection failed: {str(e)}")
