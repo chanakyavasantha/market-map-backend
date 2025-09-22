@@ -26,8 +26,8 @@ def get_mongodb_collection():
         # Add SSL configuration for Azure compatibility
         client = MongoClient(
             mongodb_uri,
-            ssl=True,
-            ssl_cert_reqs=ssl.CERT_NONE,
+            tls=True,
+            tlsAllowInvalidCertificates=True,
             serverSelectionTimeoutMS=30000,
             connectTimeoutMS=30000,
             socketTimeoutMS=30000
