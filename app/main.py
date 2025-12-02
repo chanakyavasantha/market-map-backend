@@ -1,7 +1,15 @@
+import warnings
+import os
+
+# Suppress Pydantic field shadowing warnings from dependencies
+warnings.filterwarnings("ignore", message="Field name.*shadows an attribute")
+# Suppress urllib3 OpenSSL warnings (harmless for development)
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-from .routes import indices
+from .routes import indices, news
 
 load_dotenv()
 
@@ -21,6 +29,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(indices.router)
+app.include_router(news.router)
 
 @app.get("/")
 async def root():

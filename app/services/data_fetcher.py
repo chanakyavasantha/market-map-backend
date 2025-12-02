@@ -51,7 +51,10 @@ class MarketDataFetcher:
         self.collection = None
         
         # Load indices from metadata file instead of hardcoding
-        metadata_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', 'indices_metadata.json')
+        # Get the path relative to this file's location
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        metadata_path = os.path.join(current_dir, "..", "data", "indices_metadata.json")
+        metadata_path = os.path.abspath(metadata_path)
         try:
             with open(metadata_path, 'r') as f:
                 self.metadata: Dict[str, Dict] = json.load(f)

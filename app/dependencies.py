@@ -28,9 +28,9 @@ def get_mongodb_collection():
             mongodb_uri,
             tls=True,
             tlsAllowInvalidCertificates=True,
-            serverSelectionTimeoutMS=30000,
-            connectTimeoutMS=30000,
-            socketTimeoutMS=30000
+            serverSelectionTimeoutMS=60000,  # Increase from 30000
+            connectTimeoutMS=60000,          # Increase from 30000
+            socketTimeoutMS=60000            # Increase from 30000
         )
         
         # Test the connection
